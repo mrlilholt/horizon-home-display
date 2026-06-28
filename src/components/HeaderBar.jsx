@@ -5,7 +5,11 @@ export default function HeaderBar({ now }) {
     <header className="header-bar panel">
       <div>
         <p className="eyebrow">Home Dashboard</p>
-        <h1>Horizon Home Display</h1>
+        <img
+          src="/lilholt-home-hub.png"
+          alt="Lilholt Home Hub"
+          className="header-logo-image"
+        />
       </div>
       <div className="header-meta">
         <div className="date-pill">{formatLongDate(now)}</div>
