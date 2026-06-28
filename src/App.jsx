@@ -263,12 +263,6 @@ export default function App() {
   return (
     <div className="app-shell">
       <HeaderBar now={now} />
-      <StatusBar
-        isLoading={isLoading}
-        lastUpdated={lastUpdated}
-        onRefresh={() => loadEvents({ silent: true })}
-        isRefreshing={isRefreshing}
-      />
       {showPasswordPanel ? (
         <section className="panel password-panel">
           <div className="password-panel-header">
@@ -346,6 +340,12 @@ export default function App() {
           onToggleExpand={() => setIsRadioExpanded((current) => !current)}
         />
       </main>
+      <StatusBar
+        isLoading={isLoading}
+        lastUpdated={lastUpdated}
+        onRefresh={() => loadEvents({ silent: true })}
+        isRefreshing={isRefreshing}
+      />
       {!isLocalMode && user ? (
         <AccountBar
           userEmail={user.email}
