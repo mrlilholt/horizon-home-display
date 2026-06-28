@@ -22,7 +22,7 @@ const CALENDAR_CONFIG = [
   },
   {
     envKey: "GOOGLE_CALENDAR_WIFE_ID",
-    calendarName: "Wife",
+    calendarName: "Nikki's Personal Calendar",
     calendarKey: "wife",
     color: "#BD10E0",
     obscureEnv: "OBSCURE_WIFE_TITLES",
