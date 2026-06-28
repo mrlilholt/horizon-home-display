@@ -77,6 +77,14 @@ OBSCURE_FAMILY_TITLES=false
 
 Use `GOOGLE_APPLICATION_CREDENTIALS` for local file-based development. Use `GOOGLE_SERVICE_ACCOUNT_JSON` when deploying to Netlify by pasting the full JSON payload into a Netlify environment variable.
 
+If your hosting provider makes a full JSON secret awkward, you can instead provide split service-account variables:
+
+- `GOOGLE_SERVICE_ACCOUNT_PROJECT_ID`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_ID`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+- `GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL`
+- `GOOGLE_SERVICE_ACCOUNT_CLIENT_ID`
+
 If Google Calendar is not configured, the backend automatically serves realistic mock events so the dashboard still works.
 
 ## Google Calendar setup

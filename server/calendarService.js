@@ -58,6 +58,38 @@ function parseServiceAccountJson(rawValue) {
   }
 }
 
+function normalizePrivateKey(value) {
+  if (!value) {
+    return "";
+  }
+
+  return value.replace(/\\n/g, "\n");
+}
+
+function buildServiceAccountFromParts(env) {
+  const clientEmail = env.GOOGLE_SERVICE_ACCOUNT_CLIENT_EMAIL;
+  const privateKey = normalizePrivateKey(env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY);
+
+  if (!clientEmail || !privateKey) {
+    return null;
+  }
+
+  return {
+    type: "service_account",
+    project_id: env.GOOGLE_SERVICE_ACCOUNT_PROJECT_ID || undefined,
+    private_key_id: env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY_ID || undefined,
+    private_key: privateKey,
+    client_email: clientEmail,
+    client_id: env.GOOGLE_SERVICE_ACCOUNT_CLIENT_ID || undefined,
+    auth_uri: env.GOOGLE_SERVICE_ACCOUNT_AUTH_URI || "https://accounts.google.com/o/oauth2/auth",
+    token_uri: env.GOOGLE_SERVICE_ACCOUNT_TOKEN_URI || "https://oauth2.googleapis.com/token",
+    auth_provider_x509_cert_url:
+      env.GOOGLE_SERVICE_ACCOUNT_AUTH_PROVIDER_X509_CERT_URL || "https://www.googleapis.com/oauth2/v1/certs",
+    client_x509_cert_url: env.GOOGLE_SERVICE_ACCOUNT_CLIENT_X509_CERT_URL || undefined,
+    universe_domain: env.GOOGLE_SERVICE_ACCOUNT_UNIVERSE_DOMAIN || "googleapis.com"
+  };
+}
+
 function resolveCredentialsPath(env) {
   const configuredPath = env.GOOGLE_APPLICATION_CREDENTIALS;
   if (!configuredPath) {
@@ -71,7 +103,17 @@ function resolveGoogleCredentials(env) {
   const inlineCredentials = parseServiceAccountJson(env.GOOGLE_SERVICE_ACCOUNT_JSON);
   if (inlineCredentials) {
     return {
-      credentials: inlineCredentials
+      credentials: {
+        ...inlineCredentials,
+        private_key: normalizePrivateKey(inlineCredentials.private_key)
+      }
+    };
+  }
+
+  const splitCredentials = buildServiceAccountFromParts(env);
+  if (splitCredentials) {
+    return {
+      credentials: splitCredentials
     };
   }
 
@@ -179,7 +221,7 @@ export async function getCalendarPayload(options = {}) {
       events: getMockEvents(),
       source: "mock",
       lastFetched,
-      error: "Google Calendar fetch failed. Serving mock events instead."
+      error: `Google Calendar fetch failed. Serving mock events instead. ${error.message || ""}`.trim()
     };
   }
 }

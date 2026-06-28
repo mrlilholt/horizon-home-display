@@ -10,6 +10,7 @@ import {
   updateUser
 } from "@netlify/identity";
 import AuthPanel from "./components/AuthPanel";
+import AccountBar from "./components/AccountBar";
 import HeaderBar from "./components/HeaderBar";
 import RadioPanel from "./components/RadioPanel";
 import StatusBar from "./components/StatusBar";
@@ -264,9 +265,6 @@ export default function App() {
         lastUpdated={lastUpdated}
         onRefresh={() => loadEvents({ silent: true })}
         isRefreshing={isRefreshing}
-        userEmail={user?.email || ""}
-        onLogout={isLocalMode ? null : handleLogout}
-        onManagePassword={isLocalMode ? null : () => setShowPasswordPanel((current) => !current)}
       />
       {showPasswordPanel ? (
         <section className="panel password-panel">
@@ -335,6 +333,13 @@ export default function App() {
           onToggleExpand={() => setIsRadioExpanded((current) => !current)}
         />
       </main>
+      {!isLocalMode && user ? (
+        <AccountBar
+          userEmail={user.email}
+          onManagePassword={() => setShowPasswordPanel((current) => !current)}
+          onLogout={handleLogout}
+        />
+      ) : null}
     </div>
   );
 }

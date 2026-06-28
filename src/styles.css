@@ -229,6 +229,16 @@ select {
   color: #9be24b;
 }
 
+.account-bar {
+  margin-top: 20px;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.95fr) minmax(280px, 0.58fr);
