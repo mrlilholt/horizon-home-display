@@ -8,7 +8,8 @@ export default function StatusBar({
   onRefresh,
   isRefreshing,
   userEmail,
-  onLogout
+  onLogout,
+  onManagePassword
 }) {
   return (
     <section className="panel status-bar">
@@ -23,6 +24,11 @@ export default function StatusBar({
         <button type="button" onClick={onRefresh} disabled={isRefreshing} className="refresh-button">
           {isRefreshing ? "Refreshing..." : "Refresh"}
         </button>
+        {onManagePassword ? (
+          <button type="button" onClick={onManagePassword} className="logout-button">
+            Set password
+          </button>
+        ) : null}
         {onLogout ? (
           <button type="button" onClick={onLogout} className="logout-button">
             Sign out

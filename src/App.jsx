@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { AuthError, getUser, handleAuthCallback, login, logout, onAuthChange } from "@netlify/identity";
+import {
+  AuthError,
+  getUser,
+  handleAuthCallback,
+  login,
+  logout,
+  onAuthChange,
+  requestPasswordRecovery,
+  updateUser
+} from "@netlify/identity";
 import AuthPanel from "./components/AuthPanel";
 import HeaderBar from "./components/HeaderBar";
 import RadioPanel from "./components/RadioPanel";
@@ -27,6 +36,13 @@ export default function App() {
   const [authPassword, setAuthPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [showPasswordPanel, setShowPasswordPanel] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [passwordConfirmValue, setPasswordConfirmValue] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordNotice, setPasswordNotice] = useState("");
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const isLocalMode = LOCAL_HOSTS.has(window.location.hostname);
 
   async function loadEvents({ silent = false } = {}) {
@@ -73,7 +89,12 @@ export default function App() {
 
     async function initializeAuth() {
       try {
-        await handleAuthCallback();
+        const result = await handleAuthCallback();
+        if (result?.type === "recovery") {
+          setIsRecoveryMode(true);
+          setShowPasswordPanel(true);
+          setPasswordNotice("Choose a new password to finish your Netlify Identity recovery flow.");
+        }
       } catch (callbackError) {
         setAuthError(callbackError.message || "Authentication callback failed.");
       }
@@ -89,9 +110,14 @@ export default function App() {
 
     initializeAuth();
 
-    const unsubscribe = onAuthChange((_event, nextUser) => {
+    const unsubscribe = onAuthChange((event, nextUser) => {
       setUser(nextUser || null);
       setAuthError("");
+      if (event === "recovery") {
+        setIsRecoveryMode(true);
+        setShowPasswordPanel(true);
+        setPasswordNotice("Choose a new password to finish your Netlify Identity recovery flow.");
+      }
     });
 
     return () => {
@@ -163,6 +189,53 @@ export default function App() {
     setLastUpdated("");
   }
 
+  async function handlePasswordUpdate(event) {
+    event.preventDefault();
+    setPasswordError("");
+    setPasswordNotice("");
+
+    if (passwordValue.length < 8) {
+      setPasswordError("Use at least 8 characters.");
+      return;
+    }
+
+    if (passwordValue !== passwordConfirmValue) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+
+    try {
+      await updateUser({ password: passwordValue });
+      setPasswordValue("");
+      setPasswordConfirmValue("");
+      setIsRecoveryMode(false);
+      setShowPasswordPanel(false);
+      setPasswordNotice("Password updated in Netlify Identity.");
+    } catch (updateError) {
+      setPasswordError(updateError.message || "Unable to update password.");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
+  async function handleSendResetLink() {
+    if (!user?.email) {
+      return;
+    }
+
+    setPasswordError("");
+    setPasswordNotice("");
+
+    try {
+      await requestPasswordRecovery(user.email);
+      setPasswordNotice(`Password reset email sent to ${user.email}.`);
+    } catch (recoveryError) {
+      setPasswordError(recoveryError.message || "Unable to send reset email.");
+    }
+  }
+
   if (!authReady) {
     return <div className="app-shell app-shell-loading" />;
   }
@@ -193,7 +266,64 @@ export default function App() {
         isRefreshing={isRefreshing}
         userEmail={user?.email || ""}
         onLogout={isLocalMode ? null : handleLogout}
+        onManagePassword={isLocalMode ? null : () => setShowPasswordPanel((current) => !current)}
       />
+      {showPasswordPanel ? (
+        <section className="panel password-panel">
+          <div className="password-panel-header">
+            <div>
+              <p className="eyebrow">{isRecoveryMode ? "Recovery Mode" : "Netlify Identity"}</p>
+              <h2>{isRecoveryMode ? "Set a new password" : "Update your password"}</h2>
+            </div>
+            {!isRecoveryMode ? (
+              <button type="button" className="logout-button" onClick={handleSendResetLink}>
+                Email reset link
+              </button>
+            ) : null}
+          </div>
+          <form className="password-form" onSubmit={handlePasswordUpdate}>
+            <label className="auth-field">
+              <span>New password</span>
+              <input
+                type="password"
+                value={passwordValue}
+                onChange={(event) => setPasswordValue(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </label>
+            <label className="auth-field">
+              <span>Confirm password</span>
+              <input
+                type="password"
+                value={passwordConfirmValue}
+                onChange={(event) => setPasswordConfirmValue(event.target.value)}
+                autoComplete="new-password"
+                required
+              />
+            </label>
+            {passwordError ? <p className="auth-error">{passwordError}</p> : null}
+            {passwordNotice ? <p className="password-notice">{passwordNotice}</p> : null}
+            <div className="password-actions">
+              <button type="submit" className="refresh-button" disabled={isUpdatingPassword}>
+                {isUpdatingPassword ? "Saving..." : "Save password"}
+              </button>
+              {!isRecoveryMode ? (
+                <button
+                  type="button"
+                  className="logout-button"
+                  onClick={() => {
+                    setShowPasswordPanel(false);
+                    setPasswordError("");
+                  }}
+                >
+                  Close
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </section>
+      ) : null}
       <main className={`main-grid ${isRadioExpanded ? "main-grid-radio-expanded" : ""}`}>
         <section className="left-column">
           <WeekStrip events={events} now={now} />

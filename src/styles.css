@@ -196,6 +196,39 @@ select {
   justify-self: start;
 }
 
+.password-panel {
+  margin-top: 18px;
+  padding: 24px 28px;
+}
+
+.password-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.password-panel-header h2 {
+  margin: 0;
+}
+
+.password-form {
+  display: grid;
+  gap: 16px;
+}
+
+.password-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.password-notice {
+  margin: 0;
+  color: #9be24b;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.95fr) minmax(280px, 0.58fr);
