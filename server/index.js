@@ -3,7 +3,12 @@ import express from "express";
 import cors from "cors";
 import path from "node:path";
 import fs from "node:fs";
-import { getCalendarPayload } from "./calendarService.js";
+import {
+  createCalendarEvent,
+  getCalendarPayload,
+  getWritableCalendars,
+  updateCalendarEvent
+} from "./calendarService.js";
 
 dotenv.config();
 
@@ -25,6 +30,30 @@ app.get("/api/events", async (_req, res) => {
   const payload = await getCalendarPayload();
 
   res.json(payload);
+});
+
+app.get("/api/writable-calendars", (_req, res) => {
+  res.json({
+    calendars: getWritableCalendars()
+  });
+});
+
+app.post("/api/events", async (req, res) => {
+  try {
+    const event = await createCalendarEvent(req.body);
+    res.status(201).json({ event });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to create event." });
+  }
+});
+
+app.patch("/api/events/:calendarKey/:eventId", async (req, res) => {
+  try {
+    const event = await updateCalendarEvent(req.params.calendarKey, req.params.eventId, req.body);
+    res.json({ event });
+  } catch (error) {
+    res.status(400).json({ error: error.message || "Unable to update event." });
+  }
 });
 
 if (fs.existsSync(distPath)) {

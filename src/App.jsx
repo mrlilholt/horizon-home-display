@@ -11,6 +11,7 @@ import {
 } from "@netlify/identity";
 import AuthPanel from "./components/AuthPanel";
 import AccountBar from "./components/AccountBar";
+import EventModal, { getInitialEventForm } from "./components/EventModal";
 import HeaderBar from "./components/HeaderBar";
 import RadioPanel from "./components/RadioPanel";
 import StatusBar from "./components/StatusBar";
@@ -44,6 +45,13 @@ export default function App() {
   const [passwordNotice, setPasswordNotice] = useState("");
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isRecoveryMode, setIsRecoveryMode] = useState(false);
+  const [writableCalendars, setWritableCalendars] = useState([]);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [eventModalMode, setEventModalMode] = useState("create");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [eventForm, setEventForm] = useState(getInitialEventForm([]));
+  const [eventFormError, setEventFormError] = useState("");
+  const [isSavingEvent, setIsSavingEvent] = useState(false);
   const isLocalMode = LOCAL_HOSTS.has(window.location.hostname);
 
   async function loadEvents({ silent = false } = {}) {
@@ -131,6 +139,16 @@ export default function App() {
       return;
     }
 
+    fetch("/api/writable-calendars")
+      .then((response) => response.json())
+      .then((payload) => {
+        const calendars = Array.isArray(payload.calendars) ? payload.calendars : [];
+        setWritableCalendars(calendars);
+      })
+      .catch(() => {
+        setWritableCalendars([]);
+      });
+
     loadEvents();
 
     const poller = window.setInterval(() => {
@@ -166,6 +184,95 @@ export default function App() {
   function scrollToDay(date) {
     const target = document.getElementById(getDayAnchor(date));
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function openCreateEventModal() {
+    setSelectedEvent(null);
+    setEventModalMode("create");
+    setEventFormError("");
+    setEventForm(getInitialEventForm(writableCalendars));
+    setIsEventModalOpen(true);
+  }
+
+  function openEditEventModal(event) {
+    if (!event.writable) {
+      return;
+    }
+
+    setSelectedEvent(event);
+    setEventModalMode("edit");
+    setEventFormError("");
+    setEventForm(getInitialEventForm(writableCalendars, event));
+    setIsEventModalOpen(true);
+  }
+
+  function closeEventModal() {
+    setIsEventModalOpen(false);
+    setSelectedEvent(null);
+    setEventFormError("");
+  }
+
+  function updateEventForm(field, value) {
+    setEventForm((current) => ({
+      ...current,
+      [field]: value
+    }));
+  }
+
+  function buildEventRequestPayload(form) {
+    if (form.isAllDay) {
+      return {
+        title: form.title.trim(),
+        calendarKey: form.calendarKey,
+        location: form.location.trim(),
+        isAllDay: true,
+        start: new Date(`${form.startDate}T00:00:00`).toISOString(),
+        end: new Date(`${form.endDate}T00:00:00`).toISOString()
+      };
+    }
+
+    return {
+      title: form.title.trim(),
+      calendarKey: form.calendarKey,
+      location: form.location.trim(),
+      isAllDay: false,
+      start: new Date(form.startDateTime).toISOString(),
+      end: new Date(form.endDateTime).toISOString()
+    };
+  }
+
+  async function handleEventSubmit(event) {
+    event.preventDefault();
+    setEventFormError("");
+    setIsSavingEvent(true);
+
+    try {
+      const payload = buildEventRequestPayload(eventForm);
+      const url =
+        eventModalMode === "edit"
+          ? `/api/events/${selectedEvent.calendarKey}/${selectedEvent.id}`
+          : "/api/events";
+      const method = eventModalMode === "edit" ? "PATCH" : "POST";
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unable to save event.");
+      }
+
+      closeEventModal();
+      await loadEvents({ silent: true });
+    } catch (saveError) {
+      setEventFormError(saveError.message || "Unable to save event.");
+    } finally {
+      setIsSavingEvent(false);
+    }
   }
 
   async function handleSignIn(event) {
@@ -262,7 +369,18 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <HeaderBar now={now} />
+      <HeaderBar now={now} onAddEvent={openCreateEventModal} />
+      <EventModal
+        isOpen={isEventModalOpen}
+        mode={eventModalMode}
+        form={eventForm}
+        writableCalendars={writableCalendars}
+        error={eventFormError}
+        isSaving={isSavingEvent}
+        onClose={closeEventModal}
+        onChange={updateEventForm}
+        onSubmit={handleEventSubmit}
+      />
       {showPasswordPanel ? (
         <section className="panel password-panel">
           <div className="password-panel-header">
@@ -327,12 +445,14 @@ export default function App() {
             nextEventId={nextEventId}
             now={now}
             sectionId={getDayAnchor(now)}
+            onSelectEvent={openEditEventModal}
           />
           <UpcomingEvents
             groupedEntries={groupedUpcoming}
             nextEventId={nextEventId}
             now={now}
             getSectionId={getDayAnchor}
+            onSelectEvent={openEditEventModal}
           />
         </section>
         <RadioPanel

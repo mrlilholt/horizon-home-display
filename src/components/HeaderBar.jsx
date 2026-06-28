@@ -1,6 +1,6 @@
 import { formatClock, formatLongDate } from "../utils/dateUtils";
 
-export default function HeaderBar({ now }) {
+export default function HeaderBar({ now, onAddEvent }) {
   return (
     <header className="header-bar panel">
       <div>
@@ -12,6 +12,9 @@ export default function HeaderBar({ now }) {
         />
       </div>
       <div className="header-meta">
+        <button type="button" className="header-action-button" onClick={onAddEvent}>
+          Add Event
+        </button>
         <div className="date-pill">{formatLongDate(now)}</div>
         <div className="clock">{formatClock(now)}</div>
       </div>

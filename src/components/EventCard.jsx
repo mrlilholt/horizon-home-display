@@ -1,10 +1,11 @@
 import { formatTimeRange } from "../utils/dateUtils";
 
-export default function EventCard({ event, isNow, isNext, isPast }) {
+export default function EventCard({ event, isNow, isNext, isPast, onSelect }) {
   return (
     <article
-      className={`event-card ${isPast ? "event-card-past" : ""}`}
+      className={`event-card ${isPast ? "event-card-past" : ""} ${event.writable ? "event-card-clickable" : ""}`}
       style={{ "--accent": event.color }}
+      onClick={event.writable ? () => onSelect(event) : undefined}
     >
       <div className="event-card-topline">
         <span className="calendar-chip">{event.calendarName}</span>

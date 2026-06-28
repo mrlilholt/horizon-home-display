@@ -1,6 +1,6 @@
 import EventCard from "./EventCard";
 
-export default function TodayAgenda({ events, nextEventId, now, sectionId }) {
+export default function TodayAgenda({ events, nextEventId, now, sectionId, onSelectEvent }) {
   return (
     <section className="panel section-panel" id={sectionId}>
       <div className="section-heading">
@@ -21,6 +21,7 @@ export default function TodayAgenda({ events, nextEventId, now, sectionId }) {
                 isNow={start <= now && end >= now}
                 isNext={event.id === nextEventId}
                 isPast={end < now}
+                onSelect={onSelectEvent}
               />
             );
           })}

@@ -1,7 +1,7 @@
 import { formatShortDay } from "../utils/dateUtils";
 import EventCard from "./EventCard";
 
-export default function UpcomingEvents({ groupedEntries, nextEventId, now, getSectionId }) {
+export default function UpcomingEvents({ groupedEntries, nextEventId, now, getSectionId, onSelectEvent }) {
   return (
     <section className="panel section-panel">
       <div className="section-heading">
@@ -23,6 +23,7 @@ export default function UpcomingEvents({ groupedEntries, nextEventId, now, getSe
                     isNow={false}
                     isNext={event.id === nextEventId}
                     isPast={new Date(event.end) < now}
+                    onSelect={onSelectEvent}
                   />
                 ))}
               </div>
