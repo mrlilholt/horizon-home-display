@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+service-account.json
+out
+.netlify
+.DS_Store
+npm-debug.log*
