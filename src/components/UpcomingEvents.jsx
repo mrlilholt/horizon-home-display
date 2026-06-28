@@ -1,7 +1,7 @@
 import { formatShortDay } from "../utils/dateUtils";
 import EventCard from "./EventCard";
 
-export default function UpcomingEvents({ groupedEntries, nextEventId, now }) {
+export default function UpcomingEvents({ groupedEntries, nextEventId, now, getSectionId }) {
   return (
     <section className="panel section-panel">
       <div className="section-heading">
@@ -13,7 +13,7 @@ export default function UpcomingEvents({ groupedEntries, nextEventId, now }) {
       {groupedEntries.length ? (
         <div className="upcoming-groups">
           {groupedEntries.map(([dayKey, events]) => (
-            <div key={dayKey} className="day-group">
+            <div key={dayKey} className="day-group" id={getSectionId(new Date(dayKey))}>
               <div className="day-group-header">{formatShortDay(new Date(dayKey))}</div>
               <div className="event-list compact-list">
                 {events.map((event) => (

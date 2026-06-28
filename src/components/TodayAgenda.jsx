@@ -1,8 +1,8 @@
 import EventCard from "./EventCard";
 
-export default function TodayAgenda({ events, nextEventId, now }) {
+export default function TodayAgenda({ events, nextEventId, now, sectionId }) {
   return (
-    <section className="panel section-panel">
+    <section className="panel section-panel" id={sectionId}>
       <div className="section-heading">
         <div>
           <p className="eyebrow">Today</p>

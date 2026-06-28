@@ -77,3 +77,11 @@ export function formatLastUpdated(isoString) {
     minute: "2-digit"
   }).format(new Date(isoString));
 }
+
+export function getDayAnchor(date) {
+  const day = startOfDay(date);
+  const year = day.getFullYear();
+  const month = String(day.getMonth() + 1).padStart(2, "0");
+  const dayOfMonth = String(day.getDate()).padStart(2, "0");
+  return `day-${year}-${month}-${dayOfMonth}`;
+}

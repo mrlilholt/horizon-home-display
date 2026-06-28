@@ -1,6 +1,10 @@
-export default function AccountBar({ userEmail, onManagePassword, onLogout }) {
+export default function AccountBar({ userEmail, source, error, onManagePassword, onLogout }) {
   return (
     <footer className="panel account-bar">
+      <div className="status-group">
+        <span className={`status-dot ${error ? "status-dot-error" : "status-dot-ok"}`} />
+        <span>{error ? error : `Source: ${source}`}</span>
+      </div>
       <div className="status-group">
         <span>Signed in: {userEmail}</span>
       </div>

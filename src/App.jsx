@@ -17,7 +17,7 @@ import StatusBar from "./components/StatusBar";
 import TodayAgenda from "./components/TodayAgenda";
 import UpcomingEvents from "./components/UpcomingEvents";
 import WeekStrip from "./components/WeekStrip";
-import { groupEventsByDay, isEventNow, isSameDay, startOfDay } from "./utils/dateUtils";
+import { getDayAnchor, groupEventsByDay, isEventNow, isSameDay, startOfDay } from "./utils/dateUtils";
 
 const POLL_MS = 30000;
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -163,6 +163,11 @@ export default function App() {
     return Object.entries(grouped);
   }, [events, now]);
 
+  function scrollToDay(date) {
+    const target = document.getElementById(getDayAnchor(date));
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function handleSignIn(event) {
     event.preventDefault();
     setIsSigningIn(true);
@@ -260,8 +265,6 @@ export default function App() {
       <HeaderBar now={now} />
       <StatusBar
         isLoading={isLoading}
-        source={source}
-        error={error}
         lastUpdated={lastUpdated}
         onRefresh={() => loadEvents({ silent: true })}
         isRefreshing={isRefreshing}
@@ -324,9 +327,19 @@ export default function App() {
       ) : null}
       <main className={`main-grid ${isRadioExpanded ? "main-grid-radio-expanded" : ""}`}>
         <section className="left-column">
-          <WeekStrip events={events} now={now} />
-          <TodayAgenda events={todayEvents} nextEventId={nextEventId} now={now} />
-          <UpcomingEvents groupedEntries={groupedUpcoming} nextEventId={nextEventId} now={now} />
+          <WeekStrip events={events} now={now} onSelectDate={scrollToDay} />
+          <TodayAgenda
+            events={todayEvents}
+            nextEventId={nextEventId}
+            now={now}
+            sectionId={getDayAnchor(now)}
+          />
+          <UpcomingEvents
+            groupedEntries={groupedUpcoming}
+            nextEventId={nextEventId}
+            now={now}
+            getSectionId={getDayAnchor}
+          />
         </section>
         <RadioPanel
           isExpanded={isRadioExpanded}
@@ -336,6 +349,8 @@ export default function App() {
       {!isLocalMode && user ? (
         <AccountBar
           userEmail={user.email}
+          source={source}
+          error={error}
           onManagePassword={() => setShowPasswordPanel((current) => !current)}
           onLogout={handleLogout}
         />

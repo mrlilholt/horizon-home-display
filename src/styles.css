@@ -239,6 +239,12 @@ select {
   flex-wrap: wrap;
 }
 
+.week-day {
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
 .main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.95fr) minmax(280px, 0.58fr);
